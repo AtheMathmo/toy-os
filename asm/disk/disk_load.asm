@@ -10,7 +10,7 @@ disk_load:
 	mov dh, 0x00		; Select head 0
 	mov cl, 0x02		; Start reading from the second sector
 	
-	int 0x13			; BIOs interrupt to read from dik
+	int 0x13			; BIOs interrupt to read from disk
 	
 	jc disk_error		; Jump if error (i.e. carry flag)
 

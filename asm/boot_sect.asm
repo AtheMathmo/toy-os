@@ -48,6 +48,7 @@ BEGIN_PM:
 
     jmp $                   ; Hang
 
+
 ; Global Variables
 BOOT_DRIVE      db 0
 MSG_REAL_MODE   db "Started in 16-bit Real Mode", 0
