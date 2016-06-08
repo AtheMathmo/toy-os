@@ -1,3 +1,3 @@
-floppya : 1_44=os-image, status=inserted
+floppya : 1_44=build/os-image, status=inserted
 boot: a
 display_library: sdl
