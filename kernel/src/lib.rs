@@ -5,8 +5,8 @@
 
 extern crate rlibc;
 
-#[no_mangle] // ensure that this symbol is called `rust_main` in the output
 #[start]
+#[export_name ="_start"]
 pub extern fn rust_main() {
 	let buffer = (0xb8000 + 1988) as *mut _;
 
