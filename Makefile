@@ -24,21 +24,21 @@ clean:
 os-image: $(os-image)
 
 $(os-image): $(boot_sect) $(kernel)
-	cat $^ > ./build/os-image
+	cat $^ > $@
 
 .PHONY: boot_sect
 boot_sect: $(boot_sect)
 
 $(boot_sect): asm/boot_sect.asm
 	@mkdir -p build
-	nasm asm/boot_sect.asm -f bin -o $(boot_sect) -I ./asm/
+	nasm asm/boot_sect.asm -f bin -o $@ -I ./asm/
 
 .PHONY: kernel
 kernel: $(kernel)
 
 $(kernel): $(rust_kernel)
 	@mkdir -p build
-	ld -m elf_i386 -o $(kernel) -T linker.ld $(rust_kernel)
+	ld -m elf_i386 -o $(kernel) -T linker.ld $^
 
 .PHONY: $(rust_kernel)
 $(rust_kernel):
