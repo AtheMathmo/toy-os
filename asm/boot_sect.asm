@@ -43,16 +43,42 @@ BEGIN_PM:
     mov ebx, MSG_PMODE
     call print_string_pm    ; Our 32 bit print routine
 
+    call set_up_SSE
+
     call KERNEL_OFFSET      ; Jump to the address of the loaded
                             ; kernel code
 
     jmp $                   ; Hang
+
+set_up_SSE:
+    ; check for SSE
+    mov eax, 0x1
+    cpuid
+    test edx, 1<<25
+    jz .no_SSE
+
+    ; enable SSE
+    mov eax, cr0
+    and ax, 0xFFFB      ; clear coprocessor emulation CR0.EM
+    or ax, 0x2          ; set coprocessor monitoring  CR0.MP
+    mov cr0, eax
+    mov eax, cr4
+    or ax, 3 << 9       ; set CR4.OSFXSR and CR4.OSXMMEXCPT at the same time
+    mov cr4, eax
+
+    ret
+
+.no_SSE:
+    mov ebx, MSG_SSE_ERROR
+    call print_string_pm
+    jmp $
 
 ; Global Variables
 BOOT_DRIVE      db 0
 MSG_REAL_MODE   db "Started in 16-bit Real Mode", 0
 MSG_PMODE       db "Successfully landed in 32-bit Protected Mode", 0
 MSG_LOAD_KERNEL db "Loading kernel into memory.", 0
+MSG_SSE_ERROR   db "Failed to load SSE.", 0
 
 ; Bootsector padding
 times 510-($-$$) db 0
