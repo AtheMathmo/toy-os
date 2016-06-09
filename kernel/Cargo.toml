@@ -8,6 +8,7 @@ crate-type = ["staticlib"]
 
 [dependencies]
 rlibc = "1.0.0"
+spin = "0.4.2"
 
 # The development profile, used for `cargo build`.
 [profile.dev]

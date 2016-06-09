@@ -46,4 +46,4 @@ $(kernel): $(rust_kernel)
 
 .PHONY: $(rust_kernel)
 $(rust_kernel):
-	cargo rustc --manifest-path ./kernel/Cargo.toml --target $(target) -- -C relocation-model=static -O
+	RUSTFLAGS="-C relocation-model=static -O" cargo build --manifest-path ./kernel/Cargo.toml --target $(target)
