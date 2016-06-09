@@ -14,17 +14,13 @@ mod vga_buffer;
 #[start]
 #[export_name ="_start"]
 pub extern fn rust_main() {
+
 	use core::fmt::Write;
 
 	vga_buffer::WRITER.lock().clear_screen();
 	vga_buffer::WRITER.lock().write_str("Now running the rust kernel!");
-	// vga_buffer::WRITER.lock().write_byte(b'H');
-	// vga_buffer::WRITER.lock().write_byte(b'e');
-	// vga_buffer::WRITER.lock().write_byte(b'l');
-	// vga_buffer::WRITER.lock().write_byte(b'l');
-	// vga_buffer::WRITER.lock().write_byte(b'o');
-	// vga_buffer::WRITER.lock().write_byte(b'\n');
-	// vga_buffer::WRITER.lock().write_byte(b'W');
+	// If this is commented it will work.. Otherwise broken
+	// println!("test");
 
 	loop {}
 }

@@ -4,6 +4,7 @@ target ?= $(arch)-unknown-linux-gnu
 rust_kernel := ./kernel/target/$(target)/debug/libkernel.a
 
 kernel := ./build/kernel-$(arch).bin
+kernel_elf := ./build/kernel-$(arch).elf
 boot_sect := ./build/boot_sect.bin
 
 os-image := ./build/os-image
@@ -40,9 +41,12 @@ $(boot_sect): asm/boot_sect.asm
 .PHONY: kernel
 kernel: $(kernel)
 
-$(kernel): $(rust_kernel)
+$(kernel_elf): $(rust_kernel)
 	@mkdir -p build
-	ld --gc-sections -m elf_i386 -o $(kernel) -T linker.ld $^ --oformat binary
+	ld --gc-sections -m elf_i386 -o $@ -T linker.ld $^
+
+$(kernel): $(kernel_elf)
+	objcopy --output-target=binary $< $@
 
 .PHONY: $(rust_kernel)
 $(rust_kernel):
