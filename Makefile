@@ -15,6 +15,10 @@ all: os-image
 run: all
 	bochs
 
+.PHONY: disassemble
+disassemble: $(kernel)
+	objdump -b binary -m i386 --adjust-vma=0x1000 -D $<
+
 .PHONY: clean
 clean:
 	@cargo clean --manifest-path ./kernel/Cargo.toml
