@@ -17,7 +17,7 @@ run: all
 
 .PHONY: disassemble
 disassemble: $(kernel)
-	objdump -b binary -m i386 --adjust-vma=0x1000 -D $<
+	objdump -b binary -m i386 --adjust-vma=0x1000 -D $< > dump.txt
 
 .PHONY: clean
 clean:
@@ -42,7 +42,7 @@ kernel: $(kernel)
 
 $(kernel): $(rust_kernel)
 	@mkdir -p build
-	ld -m elf_i386 -o $(kernel) -T linker.ld $^
+	ld --gc-sections -m elf_i386 -o $(kernel) -T linker.ld $^ --oformat binary
 
 .PHONY: $(rust_kernel)
 $(rust_kernel):

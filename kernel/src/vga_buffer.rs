@@ -69,16 +69,15 @@ impl Writer {
             byte => {
                 if self.column_position >= BUFFER_WIDTH {
                     self.new_line();
-                } else {
-                    let row = BUFFER_HEIGHT - 1;
-                    let col = self.column_position;
-
-                    self.buffer().chars[row][col] = ScreenChar {
-                        ascii_char: byte,
-                        colour_code: self.colour_code,
-                    };
-                    self.column_position += 1;
                 }
+                let row = BUFFER_HEIGHT - 1;
+                let col = self.column_position;
+
+                self.buffer().chars[row][col] = ScreenChar {
+                    ascii_char: byte,
+                    colour_code: self.colour_code,
+                };
+                self.column_position += 1;
             }
         }
     }
@@ -97,11 +96,9 @@ impl Writer {
     }
 
     fn new_line(&mut self) {
-        {
+        for row in 0..(BUFFER_HEIGHT - 1) {
             let buffer = self.buffer();
-            for row in 0..(BUFFER_HEIGHT - 1) {
-                buffer.chars[row] = buffer.chars[row + 1];
-            }
+            buffer.chars[row] = buffer.chars[row + 1];
         }
 
         self.clear_row(BUFFER_HEIGHT - 1);
@@ -127,22 +124,21 @@ impl Write for Writer {
     }
 }
 
-// COMMENT THIS TO FIX
 pub static WRITER: Mutex<Writer> = Mutex::new(Writer {
     column_position: 0,
     colour_code: ColourCode::new(Colour::LightGreen, Colour::Black),
     buffer: unsafe { Unique::new(0xb8000 as *mut _) },
 });
 
-pub fn print_something() {
-    // UNCOMMENT THIS TO FIX
-    // let mut writer = Writer {
-    //     column_position: 0,
-    //     colour_code: ColourCode::new(Colour::LightGreen, Colour::Black),
-    //     buffer: unsafe { Unique::new(0xb8000 as *mut _) },
-    // };
-    // writer.write_byte(b'H');
+macro_rules! println {
+    ($fmt:expr) => (print!(concat!($fmt, "\n")));
+    ($fmt:expr, $($arg:tt)*) => (print!(concat!($fmt, "\n"), $($arg)*));
+}
 
-    // COMMENT THIS TO FIX
-    WRITER.lock().write_byte(b'H');
+macro_rules! print {
+    ($($arg:tt)*) => ({
+            use core::fmt::Write;
+            let mut writer = $crate::vga_buffer::WRITER.lock();
+            writer.write_fmt(format_args!($($arg)*)).unwrap();
+    });
 }

@@ -8,12 +8,23 @@
 extern crate rlibc;
 extern crate spin;
 
+#[macro_use]
 mod vga_buffer;
 
 #[start]
 #[export_name ="_start"]
 pub extern fn rust_main() {
-	vga_buffer::print_something();
+	use core::fmt::Write;
+
+	vga_buffer::WRITER.lock().clear_screen();
+	vga_buffer::WRITER.lock().write_str("Now running the rust kernel!");
+	// vga_buffer::WRITER.lock().write_byte(b'H');
+	// vga_buffer::WRITER.lock().write_byte(b'e');
+	// vga_buffer::WRITER.lock().write_byte(b'l');
+	// vga_buffer::WRITER.lock().write_byte(b'l');
+	// vga_buffer::WRITER.lock().write_byte(b'o');
+	// vga_buffer::WRITER.lock().write_byte(b'\n');
+	// vga_buffer::WRITER.lock().write_byte(b'W');
 
 	loop {}
 }
