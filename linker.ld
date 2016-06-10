@@ -4,6 +4,11 @@ SECTIONS
 {
 	. = 0x1000;
 
+	.boot :
+	{
+		KEEP(*(.multiboot_header))
+	}
+
 	.text :
 	{
 		*(.text .text.*)
