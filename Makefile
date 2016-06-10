@@ -51,3 +51,12 @@ $(kernel): $(kernel_elf)
 .PHONY: $(rust_kernel)
 $(rust_kernel):
 	RUSTFLAGS="-C relocation-model=static -O" cargo build --manifest-path ./kernel/Cargo.toml --target $(target)
+
+grub:
+	@mkdir -p isofiles/boot/grub
+	nasm -f elf64 asm/multiboot_header.asm -o multiboot_header.o
+	nasm -f elf64 asm/boot.asm -o boot.o
+	ld -n -o kernel.bin -T linker.ld multiboot_header.o boot.o
+	@mv -f kernel.bin isofiles/boot
+	grub-mkrescue -o os.iso isofiles
+	qemu-system-x86_64 -cdrom os.iso
