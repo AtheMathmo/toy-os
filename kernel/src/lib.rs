@@ -13,22 +13,14 @@ mod vga_buffer;
 
 #[no_mangle]
 pub extern fn rust_main() {
+	vga_buffer::clear_screen();
+	println!("Now running the rust kernel!");
 
-	let x = 0xb8000 as *mut u8;
+	use vga_buffer::Colour;
+	vga_buffer::WRITER.lock().set_colour(Colour::Red, Colour::Black);
+	print!("Nothing else to do...");
 
-	unsafe {
-		let y = &mut *x;
-		*y = 0x58;
-	}
 	loop {}
-	// use core::fmt::Write;
-
-	// vga_buffer::WRITER.lock().clear_screen();
-	// vga_buffer::WRITER.lock().write_str("Now running the rust kernel!");
-	// // If this is commented it will work.. Otherwise broken
-	// // println!("test");
-
-	//loop {}
 }
 
 #[lang = "eh_personality"] extern fn eh_personality() {}
