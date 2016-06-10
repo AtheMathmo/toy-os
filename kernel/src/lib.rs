@@ -11,18 +11,24 @@ extern crate spin;
 #[macro_use]
 mod vga_buffer;
 
-#[start]
-#[export_name ="_start"]
+#[no_mangle]
 pub extern fn rust_main() {
 
-	use core::fmt::Write;
+	let x = 0xb8000 as *mut u8;
 
-	vga_buffer::WRITER.lock().clear_screen();
-	vga_buffer::WRITER.lock().write_str("Now running the rust kernel!");
-	// If this is commented it will work.. Otherwise broken
-	// println!("test");
-
+	unsafe {
+		let y = &mut *x;
+		*y = 0x58;
+	}
 	loop {}
+	// use core::fmt::Write;
+
+	// vga_buffer::WRITER.lock().clear_screen();
+	// vga_buffer::WRITER.lock().write_str("Now running the rust kernel!");
+	// // If this is commented it will work.. Otherwise broken
+	// // println!("test");
+
+	//loop {}
 }
 
 #[lang = "eh_personality"] extern fn eh_personality() {}

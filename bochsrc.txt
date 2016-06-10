@@ -1,4 +1,0 @@
-floppya : 1_44=build/os-image, status=inserted
-boot: a
-display_library: sdl
-cpu: reset_on_triple_fault=0

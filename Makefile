@@ -1,24 +1,28 @@
-arch ?= i686
+arch ?= x86_64
 target ?= $(arch)-unknown-linux-gnu
 
-rust_kernel := ./kernel/target/$(target)/debug/libkernel.a
+rust_kernel_src := ./kernel/target/$(target)/debug/libkernel.a
+rust_kernel := ./build/libkernel.a
 
+grub_cfg := ./boot/grub.cfg
+os-image := ./build/os-image.iso
 kernel := ./build/kernel-$(arch).bin
-kernel_elf := ./build/kernel-$(arch).elf
-boot_sect := ./build/boot_sect.bin
+linker_script := linker.ld
 
-os-image := ./build/os-image
+assembly_source_files := $(wildcard boot/asm/*.asm)
+assembly_object_files := $(patsubst boot/asm/%.asm, \
+	build/%.o, $(assembly_source_files))
 
 .PHONY: all
 all: os-image
 
 .PHONY: run
 run: all
-	bochs
+	qemu-system-x86_64 -cdrom $(os-image)
 
-.PHONY: disassemble
-disassemble: $(kernel)
-	objdump -b binary -m i386 --adjust-vma=0x1000 -D $< > dump.txt
+.PHONY: debug
+debug: all
+	qemu-system-x86_64 -d int -no-reboot -cdrom $(os-image)
 
 .PHONY: clean
 clean:
@@ -28,35 +32,25 @@ clean:
 .PHONY: os-image
 os-image: $(os-image)
 
-$(os-image): $(boot_sect) $(kernel)
-	cat $^ > $@
-
-.PHONY: boot_sect
-boot_sect: $(boot_sect)
-
-$(boot_sect): asm/boot_sect.asm
-	@mkdir -p build
-	nasm asm/boot_sect.asm -f bin -o $@ -I ./asm/
+$(os-image): $(kernel) $(grub_cfg)
+	@mkdir -p build/isofiles/boot/grub
+	@cp $(kernel) build/isofiles/boot/kernel.bin
+	@cp $(grub_cfg) build/isofiles/boot/grub
+	@grub-mkrescue -o $(os-image) build/isofiles 2> /dev/null
+	@rm -r build/isofiles
 
 .PHONY: kernel
 kernel: $(kernel)
 
-$(kernel_elf): $(rust_kernel)
-	@mkdir -p build
-	ld --gc-sections -m elf_i386 -o $@ -T linker.ld $^
-
-$(kernel): $(kernel_elf)
-	objcopy --output-target=binary $< $@
+$(kernel): $(rust_kernel) $(assembly_object_files) $(linker_script)
+	ld -n -T $(linker_script) -o $(kernel) $(assembly_object_files) $(rust_kernel)
 
 .PHONY: $(rust_kernel)
 $(rust_kernel):
-	RUSTFLAGS="-C relocation-model=static -O" cargo build --manifest-path ./kernel/Cargo.toml --target $(target)
+	@mkdir -p ./build
+	cargo rustc --manifest-path ./kernel/Cargo.toml --target $(target) -- -Z no-landing-pads
+	@cp $(rust_kernel_src) $(rust_kernel)
 
-grub:
-	@mkdir -p isofiles/boot/grub
-	nasm -f elf64 asm/multiboot_header.asm -o multiboot_header.o
-	nasm -f elf64 asm/boot.asm -o boot.o
-	ld -n -o kernel.bin -T linker.ld multiboot_header.o boot.o
-	@mv -f kernel.bin isofiles/boot
-	grub-mkrescue -o os.iso isofiles
-	qemu-system-x86_64 -cdrom os.iso
+build/%.o: boot/asm/%.asm
+	@mkdir -p $(shell dirname $@)
+	@nasm -felf64 $< -o $@
