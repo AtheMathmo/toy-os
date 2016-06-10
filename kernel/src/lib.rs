@@ -2,27 +2,25 @@
 #![feature(start)]
 #![no_std]
 #![feature(asm)]
+#![feature(const_fn)]
+#![feature(unique)]
 
 extern crate rlibc;
+extern crate spin;
+
+#[macro_use]
+mod vga_buffer;
 
 #[start]
 #[export_name ="_start"]
 pub extern fn rust_main() {
-	let buffer = (0xb8000 + 1988) as *mut _;
 
-	let hello_world = b"Hello World!";
-	let colour_byte = 0x1f; // White foreground, blue background
+	use core::fmt::Write;
 
-	let mut hello_coloured = [colour_byte; 24];
-	// Fill with colour
-	for (i, char_byte) in hello_world.into_iter().enumerate() {
-		hello_coloured[i * 2] = *char_byte
-	}
-
-	// Write the message
-	unsafe {
-		*buffer = hello_coloured
-	};
+	vga_buffer::WRITER.lock().clear_screen();
+	vga_buffer::WRITER.lock().write_str("Now running the rust kernel!");
+	// If this is commented it will work.. Otherwise broken
+	// println!("test");
 
 	loop {}
 }
