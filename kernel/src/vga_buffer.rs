@@ -1,4 +1,5 @@
 use core::ptr::Unique;
+use core::fmt;
 use core::fmt::Write;
 
 use spin::Mutex;
@@ -146,4 +147,26 @@ pub fn clear_screen() {
     for _ in 0..BUFFER_HEIGHT {
         println!("");
     }
+}
+
+/// Prints an error to the screen in red.
+///
+/// Uses a new writer instance to prevent deadlocking.
+/// 
+/// # Safety
+///
+/// We create a new writer that requires a unique pointer
+/// to the vga buffer. This introduces data races but shouldn't
+/// do anything too dreadful...
+pub unsafe fn print_error(fmt: fmt::Arguments) {
+    use core::fmt::Write;
+
+    let mut writer = Writer {
+        column_position: 0,
+        colour_code: ColourCode::new(Colour::Red, Colour::Black),
+        buffer: Unique::new(0xb8000 as *mut _),
+    };
+
+    writer.new_line();
+    writer.write_fmt(fmt).unwrap();
 }
