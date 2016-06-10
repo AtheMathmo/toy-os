@@ -11,16 +11,14 @@ extern crate spin;
 #[macro_use]
 mod vga_buffer;
 
-#[start]
-#[export_name ="_start"]
+#[no_mangle]
 pub extern fn rust_main() {
+	vga_buffer::clear_screen();
+	println!("Now running the rust kernel!");
 
-	use core::fmt::Write;
-
-	vga_buffer::WRITER.lock().clear_screen();
-	vga_buffer::WRITER.lock().write_str("Now running the rust kernel!");
-	// If this is commented it will work.. Otherwise broken
-	// println!("test");
+	use vga_buffer::Colour;
+	vga_buffer::WRITER.lock().set_colour(Colour::Red, Colour::Black);
+	print!("Nothing else to do...");
 
 	loop {}
 }
