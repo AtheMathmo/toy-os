@@ -4,9 +4,14 @@ SECTIONS
 {
 	. = 1M;
 
-	.boot :
+	KERNEL_START = .;
+
+	.rodata :
 	{
+		/* ensure that the multiboot header is at the beginning */
 		KEEP(*(.multiboot_header))
+		*(.rodata .rodata.*)
+		. = ALIGN(4K);
 	}
 
 	.text :
@@ -15,12 +20,23 @@ SECTIONS
 		. = ALIGN(4K);
 	}
 
-    .rodata : {
-        *(.rodata .rodata.*)
-    }
+	.data :
+	{
+		*(.data .data.*)
+		. = ALIGN(4K);
+	}
 
-    .data.rel.ro : {
-        *(.data.rel.ro.local*) *(.data.rel.ro .data.rel.ro.*)
-    }
-    
+	.bss :
+	{
+		*(.bss .bss.*)
+		. = ALIGN(4K);
+	}
+
+	.data.rel.ro : ALIGN(4K) {
+		*(.data.rel.ro.local*) *(.data.rel.ro .data.rel.ro.*)
+		. = ALIGN(4K);
+	}
+
+	
+	KERNEL_END = .;
 }

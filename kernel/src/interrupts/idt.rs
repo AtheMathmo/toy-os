@@ -1,5 +1,5 @@
 use super::HandlerFunc;
-use x86::IDTPointer;
+use x86::{IDTPointer, DescriptorTablePointer};
 use x86::asm;
 use bit_field::BitField;
 
@@ -19,10 +19,10 @@ impl Idt {
     pub fn load(&'static self) {
         use core::mem::size_of;
 
-        let ptr = IDTPointer {
+        let ptr = IDTPointer(DescriptorTablePointer {
             limit: (size_of::<Self>() - 1) as u16,
-            offset:  self as *const _ as u64,
-        };
+            offset: self as *const _ as u64,
+        });
 
         unsafe { asm::lidt(&ptr) }
     }

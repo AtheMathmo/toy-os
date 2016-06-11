@@ -18,7 +18,7 @@ all: os-image
 
 .PHONY: run
 run: all
-	qemu-system-x86_64 -cdrom $(os-image)
+	qemu-system-x86_64 -cdrom $(os-image) -m 2G
 
 .PHONY: debug
 debug: all

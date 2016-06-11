@@ -15,12 +15,10 @@ lazy_static! {
 }
 
 pub fn init() {
-	IDT.load();
+    IDT.load();
 }
 
 extern "C" fn page_fault_handler() -> ! {
-	unsafe {
-		print_error(format_args!("EXCEPTION: PAGE FAULT"))
-	};
-	loop {}
+    unsafe { print_error(format_args!("EXCEPTION: PAGE FAULT")) };
+    loop {}
 }
