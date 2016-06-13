@@ -43,7 +43,7 @@ $(os-image): $(kernel) $(grub_cfg)
 kernel: $(kernel)
 
 $(kernel): $(rust_kernel) $(assembly_object_files) $(linker_script)
-	ld -n -T $(linker_script) -o $(kernel) $(assembly_object_files) $(rust_kernel)
+	ld -n --gc-sections -T $(linker_script) -o $(kernel) $(assembly_object_files) $(rust_kernel)
 
 .PHONY: $(rust_kernel)
 $(rust_kernel):

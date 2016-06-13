@@ -10,6 +10,8 @@ extern crate spin;
 extern crate bit_field;
 #[macro_use]
 extern crate lazy_static;
+#[macro_use]
+extern crate bitflags;
 
 #[macro_use]
 mod vga_buffer;
@@ -17,34 +19,31 @@ mod interrupts;
 mod memory;
 mod x86;
 
+use memory::bitmap_frame_allocator::BitMapFrameAllocator;
+
 #[no_mangle]
 pub extern "C" fn rust_main(multiboot_info_address: usize) {
     vga_buffer::clear_screen();
     println!("Now running the rust kernel!");
-    println!("This will work...");
+    println!("My stuff:");
 
     interrupts::init();
 
-    println!("Kernel starts at: {0}\nKernel ends at: {1}\nTotal size: {2}",
+    println!("Kernel starts at: 0x{0:x}\nKernel ends at: 0x{1:x}\nTotal size: 0x{2:x}",
              memory::kernel_memory_start(),
              memory::kernel_memory_end(),
              memory::kernel_memory_end() - memory::kernel_memory_start());
 
     unsafe {
 	    let (b_start, b_end) = memory::bootloader_info_memory_limits(multiboot_info_address);
-	    println!("Bootloader info starts at: {0}\nBootloader info ends at: {1}\nTotal size: {2}",
+	    println!("Bootloader info starts at: 0x{0:x}\nBootloader info ends at: 0x{1:x}\nTotal size: 0x{2:x}",
 	    		b_start,
 	    		b_end,
 	    		b_end - b_start);
 	}
 
-	use memory::FrameAllocator;
-	let mut allocator = memory::bitmap_frame_allocator::BitMapFrameAllocator::new();
-
-	for _ in 0..20 {
-		allocator.allocate_frame();
-	}
-
+	let mut frame_allocator = BitMapFrameAllocator::new(memory::kernel_memory_start(), memory::kernel_memory_end());
+	memory::test_paging(&mut frame_allocator);
 
     // Produces a page fault
     unsafe { *(0xdeadbeef as *mut u64) = 42 };

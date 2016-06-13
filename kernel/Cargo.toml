@@ -19,3 +19,4 @@ rlibc = "1.0.0"
 spin = "0.4.2"
 bit_field = "0.2.1"
 lazy_static = { version = "0.2.1", features = ["spin_no_std"] }
+bitflags = "0.7.0"
