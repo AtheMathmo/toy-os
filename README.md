@@ -1,6 +1,6 @@
 # toy-os
 
-This project is a playground for building an OS. I originally began this project whilst following alongside some [lecture notes]((https://www.cs.bham.ac.uk/~exr/lectures/opsys/10_11/lectures/os-dev.pdf)) for writing a simple operating system from scratch.
+This project is a playground for building an OS. I originally began this project whilst following alongside some [lecture notes](https://www.cs.bham.ac.uk/~exr/lectures/opsys/10_11/lectures/os-dev.pdf) for writing a simple operating system from scratch.
 
 Once I had a simple C kernel working I decided to switch to [Rust](https://www.rust-lang.org/)! This was a fairly painful transition initially. Adapting my boot loader proved to be very error prone. Eventually I switched to GRUB and began following [Philipp Oppermann's awesome blog](http://os.phil-opp.com/). Which is crazy good.
 
