@@ -67,9 +67,14 @@ impl<L: TableLevel> IndexMut<usize> for Table<L> {
 impl<L: TableLevel> Table<L> {
     /// Set all entries in the table to be unused
     pub fn zero(&mut self) {
+        unsafe {
+            use vga_buffer::print_error;
+            print_error(format_args!("Zeroing 0x{:x}", self as *const _ as usize));
+        }
+
         for entry in self.entries.iter_mut() {
             entry.set_unused();
-        }
+		}
     }
 }
 
@@ -88,10 +93,6 @@ impl<L: HierarchicalLevel> Table<L> {
 
     fn next_table_address(&self, index: usize) -> Option<usize> {
         let entry_flags = self[index].flags();
-        unsafe {
-        	use vga_buffer::print_error;
-        	print_error(format_args!("{:?}", self[index]));
-        }
 
         if entry_flags.contains(PRESENT) && !entry_flags.contains(HUGE_PAGE) {
             let table_address = self as *const _ as usize;
@@ -102,21 +103,36 @@ impl<L: HierarchicalLevel> Table<L> {
         }
     }
 
-    // Get the next table or create one if it does not exist
+    /// Get the next table or create one if it does not exist
     pub fn next_table_create<A>(&mut self,
                                 index: usize,
                                 allocator: &mut A)
                                 -> &mut Table<L::NextLevel>
         where A: FrameAllocator
-    {	
+    {
         if self.next_table(index).is_none() {
             assert!(!self.entries[index].flags().contains(HUGE_PAGE),
                     "mapping code does not support huge pages");
             let frame = allocator.allocate_frame().expect("no frames available");
             self.entries[index].set(frame, PRESENT | WRITABLE);
-            
-            self.next_table_mut(index).unwrap().zero();
-            println!("ZEROD, {}", index);
+
+            unsafe {
+                use vga_buffer::print_error;
+                print_error(format_args!("Curr table: 0x{:x}", self as *mut _ as usize));
+                print_error(format_args!("Entries[{0}]: {1:?} at 0x{2:x}",
+                                         index,
+                                         self.entries[index],
+                                         &self.entries[index] as *const _ as usize));
+                {
+                    let a = self.next_table_mut(index).unwrap();
+                    print_error(format_args!("next table: 0x{:x}", a as *mut _ as usize));
+                    a.zero();
+                }
+                print_error(format_args!("Entries[{0}]: {1:?} at 0x{2:x}",
+                                         index,
+                                         self.entries[index],
+                                         &self.entries[index] as *const _ as usize));
+            }
         }
         let val = self.next_table_mut(index);//.unwrap()
         assert!(!val.is_none());

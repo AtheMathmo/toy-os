@@ -12,6 +12,7 @@ extern crate bit_field;
 extern crate lazy_static;
 #[macro_use]
 extern crate bitflags;
+extern crate multiboot2;
 
 #[macro_use]
 mod vga_buffer;
@@ -41,8 +42,19 @@ pub extern "C" fn rust_main(multiboot_info_address: usize) {
 	    		b_end,
 	    		b_end - b_start);
 	}
+    let boot_info = unsafe { multiboot2::load(multiboot_info_address) };
+    let memory_map_tag = boot_info.memory_map_tag()
+        .expect("Memory map tag required");
 
-	let mut frame_allocator = BitMapFrameAllocator::new(memory::kernel_memory_start(), memory::kernel_memory_end());
+    let bootloader_info_memory_limits = unsafe { memory::bootloader_info_memory_limits(multiboot_info_address) };
+
+    let mut frame_allocator = memory::area_frame_allocator::AreaFrameAllocator::new(
+        memory::kernel_memory_start(), memory::kernel_memory_end(),
+        bootloader_info_memory_limits.0, bootloader_info_memory_limits.1,
+        memory_map_tag.memory_areas(),
+    );
+
+	//let mut frame_allocator = BitMapFrameAllocator::new(memory::kernel_memory_start(), memory::kernel_memory_end());
 	memory::test_paging(&mut frame_allocator);
 
     // Produces a page fault

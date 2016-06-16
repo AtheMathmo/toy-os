@@ -20,3 +20,4 @@ spin = "0.4.2"
 bit_field = "0.2.1"
 lazy_static = { version = "0.2.1", features = ["spin_no_std"] }
 bitflags = "0.7.0"
+multiboot2 = { git = "https://github.com/phil-opp/multiboot2-elf64" }
