@@ -34,14 +34,16 @@ pub extern "C" fn rust_main(multiboot_info_address: usize) {
              memory::kernel_memory_end() - memory::kernel_memory_start());
 
     unsafe {
-	    let (b_start, b_end) = memory::bootloader_info_memory_limits(multiboot_info_address);
-	    println!("Bootloader info starts at: 0x{0:x}\nBootloader info ends at: 0x{1:x}\nTotal size: 0x{2:x}",
-	    		b_start,
-	    		b_end,
-	    		b_end - b_start);
-	}
+        let (b_start, b_end) = memory::bootloader_info_memory_limits(multiboot_info_address);
+        println!("Bootloader info starts at: 0x{0:x}\nBootloader info ends at: 0x{1:x}\nTotal \
+                  size: 0x{2:x}",
+                 b_start,
+                 b_end,
+                 b_end - b_start);
+    }
 
-	let mut frame_allocator = BitMapFrameAllocator::new(memory::kernel_memory_start(), memory::kernel_memory_end());
+    let mut frame_allocator = BitMapFrameAllocator::new(memory::kernel_memory_start(),
+                                                        memory::kernel_memory_end());
 
     memory::remap_the_kernel(&mut frame_allocator);
 

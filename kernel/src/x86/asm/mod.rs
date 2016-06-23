@@ -13,15 +13,15 @@ pub fn get_cs() -> u16 {
 
 /// Return the cr3 register
 pub unsafe fn cr3() -> usize {
-	let cr3 : usize;
-	// Mov cr3 reg out
-	asm!("mov %cr3, $0" : "=r" (cr3));
-	cr3
+    let cr3: usize;
+    // Mov cr3 reg out
+    asm!("mov %cr3, $0" : "=r" (cr3));
+    cr3
 }
 
 /// Write the specified value to the cr3 register
 pub unsafe fn write_to_cr3(cr3: usize) {
-    //Write value to cr3 reg again
+    // Write value to cr3 reg again
     asm!("mov $0, %cr3" :: "r" (cr3) : "memory");
 }
 
