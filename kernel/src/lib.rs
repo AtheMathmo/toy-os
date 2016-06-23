@@ -12,7 +12,6 @@ extern crate bit_field;
 extern crate lazy_static;
 #[macro_use]
 extern crate bitflags;
-extern crate multiboot2;
 
 #[macro_use]
 mod vga_buffer;
@@ -26,7 +25,6 @@ use memory::bitmap_frame_allocator::BitMapFrameAllocator;
 pub extern "C" fn rust_main(multiboot_info_address: usize) {
     vga_buffer::clear_screen();
     println!("Now running the rust kernel!");
-    println!("My stuff:");
 
     interrupts::init();
 
@@ -42,21 +40,10 @@ pub extern "C" fn rust_main(multiboot_info_address: usize) {
 	    		b_end,
 	    		b_end - b_start);
 	}
-    let boot_info = unsafe { multiboot2::load(multiboot_info_address) };
-    let memory_map_tag = boot_info.memory_map_tag()
-        .expect("Memory map tag required");
 
-    let bootloader_info_memory_limits = unsafe { memory::bootloader_info_memory_limits(multiboot_info_address) };
+	let mut frame_allocator = BitMapFrameAllocator::new(memory::kernel_memory_start(), memory::kernel_memory_end());
 
-    let mut frame_allocator = memory::area_frame_allocator::AreaFrameAllocator::new(
-        memory::kernel_memory_start(), memory::kernel_memory_end(),
-        bootloader_info_memory_limits.0, bootloader_info_memory_limits.1,
-        memory_map_tag.memory_areas(),
-    );
-
-	//let mut frame_allocator = BitMapFrameAllocator::new(memory::kernel_memory_start(), memory::kernel_memory_end());
-
-    memory::remap_the_kernel(&mut frame_allocator, boot_info);
+    memory::remap_the_kernel(&mut frame_allocator);
 
     println!("It did not crash!");
 

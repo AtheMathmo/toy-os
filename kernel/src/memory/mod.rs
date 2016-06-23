@@ -1,5 +1,4 @@
 pub mod bitmap_frame_allocator;
-pub mod area_frame_allocator;
 mod paging;
 
 pub use self::paging::remap_the_kernel;

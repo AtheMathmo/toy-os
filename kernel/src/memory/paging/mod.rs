@@ -2,7 +2,6 @@ pub use self::entry::*;
 pub use self::mapper::Mapper;
 use self::temporary_page::TemporaryPage;
 
-use multiboot2::BootInformation;
 use memory::{PAGE_SIZE, Frame, FrameAllocator};
 use core::ops::{Deref, DerefMut};
 use x86::asm;
@@ -149,8 +148,8 @@ impl InactivePageTable {
     }
 }
 
-
-pub fn remap_the_kernel<A>(allocator: &mut A, boot_info: &BootInformation)
+/// Remap the kernel using the allocator.
+pub fn remap_the_kernel<A>(allocator: &mut A)
     where A: FrameAllocator
 {
     let mut temporary_page = TemporaryPage::new(Page { number: 0xcafebabe }, allocator);
@@ -162,34 +161,20 @@ pub fn remap_the_kernel<A>(allocator: &mut A, boot_info: &BootInformation)
     };
 
     active_table.with(&mut new_table, &mut temporary_page, |mapper| {
-        let elf_sections_tag = boot_info.elf_sections_tag()
-                                        .expect("Memory map tag required");
+        // Identity map the kernel
+        let start_frame = Frame::containing_address(super::kernel_memory_start());
+        let end_frame = Frame::containing_address(super::kernel_memory_end());
 
-        for section in elf_sections_tag.sections() {
-            if !section.is_allocated() {
-                // section is not loaded to memory
-                continue;
-            }
-            assert!(section.addr as usize % PAGE_SIZE == 0,
-                    "sections need to be page aligned");
-
-            println!("mapping section at addr: {:#x}, size: {:#x}",
-                     section.addr,
-                     section.size);
-
-            let flags = WRITABLE; // TODO use real section flags
-
-            let start_frame = Frame::containing_address(section.start_address());
-            let end_frame = Frame::containing_address(section.end_address() - 1);
-            for frame in Frame::range_inclusive(start_frame, end_frame) {
-                mapper.identity_map(frame, flags, allocator);
-            }
+        for frame in Frame::range_inclusive(start_frame, end_frame) {
+            mapper.identity_map(frame, WRITABLE, allocator);
         }
 
+        // Identity map the VGA buffer
         let vga_bugger_frame = Frame::containing_address(0xb8000);
         mapper.identity_map(vga_bugger_frame, WRITABLE, allocator);
     });
 
+    // Switch to using the newly mapped table
     active_table.switch(new_table);
     println!("Using the new table!");
 }
