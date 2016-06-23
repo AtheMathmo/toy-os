@@ -19,7 +19,7 @@ impl FrameAllocator for BitMapFrameAllocator {
             if self.is_frame_free(&frame) {
                 // Allocate the frame and return it
                 let index_in_row = frame.number % 8;
-                self.bit_map[frame.number / 8] |= !(1 << index_in_row);
+                self.bit_map[frame.number / 8] |= 1 << index_in_row;
                 return Some(frame);
             }
         }
@@ -38,30 +38,28 @@ impl BitMapFrameAllocator {
     ///
     /// The allocator will reserve the memory within the kernel
     pub fn new(kernel_start: usize, kernel_end: usize) -> Self {
-        // let kernel_start_frame = Frame::containing_address(kernel_start);
-        // let kernel_end_frame = Frame::containing_address(kernel_end);
+        let kernel_start_frame = Frame::containing_address(kernel_start);
+        let kernel_end_frame = Frame::containing_address(kernel_end);
 
-        // let mut bit_map = [0; BIT_MAP_TABLE_ROWS];
-        // let reserved_frame_start = kernel_start_frame.number / 8;
-        // let reserved_frame_end = kernel_end_frame.number / 8;
-        // let reserved_start_index = kernel_start_frame.number % 8;
-        // let reserved_end_index = kernel_end_frame.number % 8;
+        let mut bit_map = [0; BIT_MAP_TABLE_ROWS];
+        let reserved_frame_start = kernel_start_frame.number / 8;
+        let reserved_frame_end = kernel_end_frame.number / 8;
+        let reserved_start_index = kernel_start_frame.number % 8;
+        let reserved_end_index = kernel_end_frame.number % 8;
 
-        // // Reserve all bits on the left of the kernel start frame
-        // bit_map[reserved_frame_start] |=  u8::MAX << reserved_start_index;
+        // Reserve all bits on the left of the kernel start frame
+        bit_map[reserved_frame_start] |= u8::MAX << reserved_start_index;
 
-        // // Reserve all bits on the right of the kernel end frame
-        // bit_map[reserved_frame_start] |=  !(u8::MAX << reserved_end_index);
-        
-        // // Set all frames inside kernel memory to used
-        // for i in reserved_frame_start + 1 .. reserved_frame_end - 1 {
-        //     bit_map[i] = u8::MAX;
-        // }
+        // Reserve all bits on the right of the kernel end frame
+        bit_map[reserved_frame_start] |= !(u8::MAX << reserved_end_index);
 
-
-        BitMapFrameAllocator {
-            bit_map: [0; BIT_MAP_TABLE_ROWS],
+        // Set all frames inside kernel memory to used
+        for i in reserved_frame_start + 1..reserved_frame_end - 1 {
+            bit_map[i] = u8::MAX;
         }
+
+
+        BitMapFrameAllocator { bit_map: bit_map }
     }
 
     pub fn is_frame_free(&self, frame: &Frame) -> bool {

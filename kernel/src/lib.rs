@@ -55,10 +55,8 @@ pub extern "C" fn rust_main(multiboot_info_address: usize) {
     );
 
 	//let mut frame_allocator = BitMapFrameAllocator::new(memory::kernel_memory_start(), memory::kernel_memory_end());
-	memory::test_paging(&mut frame_allocator);
 
-    // Produces a page fault
-    unsafe { *(0xdeadbeef as *mut u64) = 42 };
+    memory::remap_the_kernel(&mut frame_allocator, boot_info);
 
     println!("It did not crash!");
 

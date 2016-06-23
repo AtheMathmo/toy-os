@@ -67,14 +67,9 @@ impl<L: TableLevel> IndexMut<usize> for Table<L> {
 impl<L: TableLevel> Table<L> {
     /// Set all entries in the table to be unused
     pub fn zero(&mut self) {
-        unsafe {
-            use vga_buffer::print_error;
-            print_error(format_args!("Zeroing 0x{:x}", self as *const _ as usize));
-        }
-
         for entry in self.entries.iter_mut() {
             entry.set_unused();
-		}
+        }
     }
 }
 
@@ -116,26 +111,8 @@ impl<L: HierarchicalLevel> Table<L> {
             let frame = allocator.allocate_frame().expect("no frames available");
             self.entries[index].set(frame, PRESENT | WRITABLE);
 
-            unsafe {
-                use vga_buffer::print_error;
-                print_error(format_args!("Curr table: 0x{:x}", self as *mut _ as usize));
-                print_error(format_args!("Entries[{0}]: {1:?} at 0x{2:x}",
-                                         index,
-                                         self.entries[index],
-                                         &self.entries[index] as *const _ as usize));
-                {
-                    let a = self.next_table_mut(index).unwrap();
-                    print_error(format_args!("next table: 0x{:x}", a as *mut _ as usize));
-                    a.zero();
-                }
-                print_error(format_args!("Entries[{0}]: {1:?} at 0x{2:x}",
-                                         index,
-                                         self.entries[index],
-                                         &self.entries[index] as *const _ as usize));
-            }
+            self.next_table_mut(index).unwrap().zero();
         }
-        let val = self.next_table_mut(index);//.unwrap()
-        assert!(!val.is_none());
-        val.unwrap()
+        self.next_table_mut(index).unwrap()
     }
 }
