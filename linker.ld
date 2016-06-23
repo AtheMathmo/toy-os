@@ -37,6 +37,11 @@ SECTIONS
 		. = ALIGN(4K);
 	}
 
+	.other :
+	{
+		*(*)
+		. = ALIGN(4k);
+	}
 	
 	KERNEL_END = .;
 }

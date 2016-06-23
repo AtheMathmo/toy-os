@@ -1,12 +1,13 @@
 /// Using a bitmap
 /// First page will be allocated after the kernel
 
-use super::{kernel_memory_end, Frame, FrameAllocator};
+use super::{Frame, FrameAllocator};
+use core::u8;
 
-const BIT_MAP_TABLE_ROWS: usize = 32;
+// 512bytes * 8 = 4096 frames
+const BIT_MAP_TABLE_ROWS: usize = 512;
 
 pub struct BitMapFrameAllocator {
-    paging_start: u64,
     bit_map: [u8; BIT_MAP_TABLE_ROWS],
 }
 
@@ -18,7 +19,7 @@ impl FrameAllocator for BitMapFrameAllocator {
             if self.is_frame_free(&frame) {
                 // Allocate the frame and return it
                 let index_in_row = frame.number % 8;
-                self.bit_map[frame.number / 8] |= !(1 << index_in_row);
+                self.bit_map[frame.number / 8] |= 1 << index_in_row;
                 return Some(frame);
             }
         }
@@ -33,17 +34,41 @@ impl FrameAllocator for BitMapFrameAllocator {
 }
 
 impl BitMapFrameAllocator {
-    pub fn new() -> Self {
-        BitMapFrameAllocator { paging_start: kernel_memory_end(), bit_map: [0; BIT_MAP_TABLE_ROWS] }
+    /// Creates a new BitMapFrameAllocator
+    ///
+    /// The allocator will reserve the memory within the kernel
+    pub fn new(kernel_start: usize, kernel_end: usize) -> Self {
+        let kernel_start_frame = Frame::containing_address(kernel_start);
+        let kernel_end_frame = Frame::containing_address(kernel_end);
+
+        let mut bit_map = [0; BIT_MAP_TABLE_ROWS];
+        let reserved_frame_start = kernel_start_frame.number / 8;
+        let reserved_frame_end = kernel_end_frame.number / 8;
+        let reserved_start_index = kernel_start_frame.number % 8;
+        let reserved_end_index = kernel_end_frame.number % 8;
+
+        // Reserve all bits on the left of the kernel start frame
+        bit_map[reserved_frame_start] |= u8::MAX << reserved_start_index;
+
+        // Reserve all bits on the right of the kernel end frame
+        bit_map[reserved_frame_start] |= !(u8::MAX << reserved_end_index);
+
+        // Set all frames inside kernel memory to used
+        for i in reserved_frame_start + 1..reserved_frame_end - 1 {
+            bit_map[i] = u8::MAX;
+        }
+
+
+        BitMapFrameAllocator { bit_map: bit_map }
     }
 
-    fn is_frame_free(&self, frame: &Frame) -> bool {
+    pub fn is_frame_free(&self, frame: &Frame) -> bool {
         if frame.number < 8 {
             // If in the first simply shift first row and get bit
-            (self.bit_map[0] >> frame.number) == 1
+            ((self.bit_map[0] >> frame.number) & 1) == 0
         } else {
             // Get row for that frame and shift the appropriate amount
-            (self.bit_map[frame.number / 8] >> (frame.number % 8)) == 1
+            ((self.bit_map[frame.number / 8] >> (frame.number % 8)) & 1) == 0
         }
     }
 }

@@ -13,16 +13,21 @@ assembly_source_files := $(wildcard boot/asm/*.asm)
 assembly_object_files := $(patsubst boot/asm/%.asm, \
 	build/%.o, $(assembly_source_files))
 
+gdb := ~/Software/rust-os-gdb/bin/rust-gdb
+
 .PHONY: all
 all: os-image
 
 .PHONY: run
 run: all
-	qemu-system-x86_64 -cdrom $(os-image) -m 2G
+	qemu-system-x86_64 -cdrom $(os-image) -m 2G -s
 
 .PHONY: debug
 debug: all
-	qemu-system-x86_64 -d int -no-reboot -cdrom $(os-image)
+	qemu-system-x86_64 -cdrom $(os-image) -s -S
+
+gdb: $(kernel)
+	$(gdb) "build/kernel-x86_64.bin" -ex "target remote :1234"
 
 .PHONY: clean
 clean:
@@ -43,12 +48,12 @@ $(os-image): $(kernel) $(grub_cfg)
 kernel: $(kernel)
 
 $(kernel): $(rust_kernel) $(assembly_object_files) $(linker_script)
-	ld -n -T $(linker_script) -o $(kernel) $(assembly_object_files) $(rust_kernel)
+	ld -n --gc-sections -T $(linker_script) -o $(kernel) $(assembly_object_files) $(rust_kernel)
 
 .PHONY: $(rust_kernel)
 $(rust_kernel):
 	@mkdir -p ./build
-	cargo rustc --manifest-path ./kernel/Cargo.toml --target $(target) -- -Z no-landing-pads
+	cargo build --manifest-path ./kernel/Cargo.toml --target $(target)
 	@cp $(rust_kernel_src) $(rust_kernel)
 
 build/%.o: boot/asm/%.asm
