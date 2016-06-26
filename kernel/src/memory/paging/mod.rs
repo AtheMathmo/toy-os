@@ -166,6 +166,7 @@ pub fn remap_the_kernel<A>(allocator: &mut A)
         let end_frame = Frame::containing_address(super::kernel_memory_end());
 
         for frame in Frame::range_inclusive(start_frame, end_frame) {
+            //TODO: Should use the right flags
             mapper.identity_map(frame, WRITABLE, allocator);
         }
 
@@ -175,6 +176,11 @@ pub fn remap_the_kernel<A>(allocator: &mut A)
     });
 
     // Switch to using the newly mapped table
-    active_table.switch(new_table);
+    let old_table = active_table.switch(new_table);
     println!("Using the new table!");
+
+    let old_p4_page = Page::containing_address(old_table.p4_frame.start_address());
+
+    active_table.unmap(old_p4_page, allocator);
+    println!("Guard page at: {:#x}", old_p4_page.start_address());
 }

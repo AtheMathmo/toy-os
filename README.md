@@ -16,3 +16,11 @@ My immediate goals are to achieve the following (roughly in order):
 4. File system.
 
 If it is remotely possible I'll be looking at throwing machine learning into the mix. If anyone has any ideas on how that could be achieved I'd love to hear them!
+
+## TODOS:
+
+Things on the immediate checklist.
+
+- Write code to parse the grub multiboot headers.
+- Use the headers to set the flags on the kernel remap function.
+- Write a heap allocator!
