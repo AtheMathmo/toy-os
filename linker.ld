@@ -39,8 +39,7 @@ SECTIONS
 
 	.other :
 	{
-		*(*)
-		. = ALIGN(4k);
+		*(.debug*)
 	}
 	
 	KERNEL_END = .;

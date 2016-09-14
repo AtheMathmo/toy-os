@@ -41,7 +41,7 @@ pub extern "C" fn rust_main(multiboot_info_address: usize) {
                  b_end,
                  b_end - b_start);
     }
-
+    
     let mut frame_allocator = BitMapFrameAllocator::new(memory::kernel_memory_start(),
                                                         memory::kernel_memory_end());
 
@@ -71,4 +71,10 @@ pub extern "C" fn fmod() {
 #[no_mangle]
 pub extern "C" fn fmodf() {
     panic!("fmodf is currently not implemented.");
+}
+
+#[allow(non_snake_case)]
+#[no_mangle]
+pub extern "C" fn _Unwind_Resume() -> ! {
+    loop {}
 }
